@@ -45,10 +45,12 @@ sub findfiles
         $hg =~ s:/:_:g;
         $hg =~ s:\.:_:g;
         $hg =~ s:-:_:g;
+        $hg =~ s:\+:plus:g;
         $hg =~ s:include-extras:sstfilters_extras:;
         $hg =~ s:src:sstfilters_src:;
         $hg =~ s:examples:sstfilters_examples:;
         $hg = uc($hg);
+        $hg =~ s/[^a-zA-Z0-9_]/_/g;
         print "$f -> $hg\n";
 
         print "$f -> ${f}.bak\n";

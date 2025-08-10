@@ -16,6 +16,9 @@ target_sources(sst-filters-tests
         ResonanceWarpTest.cpp
         TriPoleFilterTest.cpp
         VintageLaddersTest.cpp
+
+        filter_plus_plus.cpp
+
         tests.cpp
 )
 
