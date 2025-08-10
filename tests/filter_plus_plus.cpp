@@ -24,15 +24,13 @@
 
 TEST_CASE("Filter++ on Classic")
 {
-    using vcf_t = sst::filterplusplus::Filter<sst::filterplusplus::VemberClassic>;
+    using vcf_t = sst::filterplusplus::Filter<sst::filterplusplus::VemberClassic, 16>;
 
     auto filter = vcf_t();
     filter.setPassType(vcf_t::config_t::PassTypes::LP);
     filter.setSlope(vcf_t::config_t::Slopes::Slope_24db);
     filter.setDrive(vcf_t::config_t::Drives::Driven);
     filter.setSampleRate(48000.0f);
-    ;
-    filter.setBlockSize(16);
 
     REQUIRE(filter.prepareInstance());
 

@@ -26,7 +26,7 @@ DeclareFeature(PassTypes)
 {
     static constexpr bool supportsPassTypes{true};
 
-    using passTypes_t = typename FilterConfig<ft>::PassTypes;
+    using passTypes_t = typename FilterConfig<ft, blockSize>::PassTypes;
     void setPassType(const passTypes_t &p) { passType = p; }
 
   protected:
@@ -36,7 +36,7 @@ DeclareFeature(PassTypes)
 DeclareFeature(Slope)
 {
     static constexpr bool supportsSlope{true};
-    using slopes_t = typename FilterConfig<ft>::Slopes;
+    using slopes_t = typename FilterConfig<ft, blockSize>::Slopes;
     void setSlope(const slopes_t &s) { slope = s; }
 
   protected:
@@ -46,7 +46,7 @@ DeclareFeature(Slope)
 DeclareFeature(Drive)
 {
     static constexpr bool supportsDrive{true};
-    using drives_t = typename FilterConfig<ft>::Drives;
+    using drives_t = typename FilterConfig<ft, blockSize>::Drives;
     void setDrive(const drives_t &d) { drive = d; }
 
   protected:

@@ -17,22 +17,25 @@
 #define INCLUDE_SST_FILTERPLUSPLUS_DETAILS_FEATURES_DETAILS_H
 
 #define DeclareFeature(X)                                                                          \
-    template <FilterTypes ft, typename = void> struct supports##X                                  \
+    template <FilterModels ft, size_t blockSize, typename = void> struct supports##X               \
     {                                                                                              \
         static constexpr bool value = false;                                                       \
     };                                                                                             \
-    template <FilterTypes ft>                                                                      \
-    struct supports##X<ft, std::void_t<decltype(std::declval<FilterConfig<ft>>().has##X)>>         \
+    template <FilterModels ft, size_t blockSize>                                                   \
+    struct supports##X<ft, blockSize,                                                              \
+                       std::void_t<decltype(std::declval<FilterConfig<ft, blockSize>>().has##X)>>  \
     {                                                                                              \
-        static constexpr bool value = FilterConfig<ft>::has##X;                                    \
+        static constexpr bool value = FilterConfig<ft, blockSize>::has##X;                         \
     };                                                                                             \
-    template <FilterTypes ft> static constexpr bool supports##X##_v = supports##X<ft>::value;      \
-    template <FilterTypes ft, bool b> struct With##X                                               \
+    template <FilterModels ft, size_t blockSize>                                                   \
+    static constexpr bool supports##X##_v = supports##X<ft, blockSize>::value;                     \
+    template <FilterModels ft, size_t blockSize, bool b> struct With##X                            \
     {                                                                                              \
         static constexpr bool supports##X{false};                                                  \
     };                                                                                             \
                                                                                                    \
-    template <FilterTypes ft> using Add##X = With##X<ft, supports##X##_v<ft>>;                     \
-    template <FilterTypes ft> struct With##X<ft, true>
+    template <FilterModels ft, size_t blockSize>                                                   \
+    using Add##X = With##X<ft, blockSize, supports##X##_v<ft, blockSize>>;                         \
+    template <FilterModels ft, size_t blockSize> struct With##X<ft, blockSize, true>
 
 #endif // FEATURES_DETAILS_H

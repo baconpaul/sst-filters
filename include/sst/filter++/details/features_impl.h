@@ -18,8 +18,8 @@
 
 namespace sst::filterplusplus::features
 {
-template <FilterTypes ft>
-void WithBasicQuadFilterAPI<ft, true>::setupCoefficients(int voice, float cu, float res)
+template <FilterModels ft, size_t blockSize>
+void WithBasicQuadFilterAPI<ft, blockSize, true>::setupCoefficients(int voice, float cu, float res)
 {
 }
 } // namespace sst::filterplusplus::features

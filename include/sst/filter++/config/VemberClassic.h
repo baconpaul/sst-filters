@@ -19,9 +19,11 @@
 #include "sst/filter++/features.h"
 #include "sst/filters.h"
 
+#include <sst/filter++/api.h>
+
 namespace sst::filterplusplus
 {
-template <> struct FilterConfig<FilterTypes::VemberClassic>
+template <size_t blockSize> struct FilterConfig<FilterModels::VemberClassic, blockSize>
 {
     static constexpr bool hasPassTypes{true};
     enum PassTypes
@@ -51,63 +53,70 @@ template <> struct FilterConfig<FilterTypes::VemberClassic>
 
     static constexpr bool hasBasicQuadFilterAPI{true};
 
-    friend class Filter<FilterTypes::VemberClassic>;
+    friend class Filter<FilterModels::VemberClassic, blockSize>;
 };
 
-template <> bool Filter<FilterTypes::VemberClassic>::prepareInstance()
+template <size_t blockSize> struct FilterPreparation<FilterModels::VemberClassic, blockSize>
 {
-
-    if (passType == passTypes_t::Notch && !(drive == drives_t::Mild || drive == drives_t::Standard))
+    static constexpr FilterModels ft = FilterModels::VemberClassic;
+    using filter_t = Filter<ft, blockSize>;
+    [[nodiscard]] static bool prepareInstance(Filter<ft, blockSize> &f)
     {
-        return false;
-    }
+        if (f.passType == filter_t::passTypes_t::Notch &&
+            !(f.drive == filter_t::drives_t::Mild || f.drive == filter_t::drives_t::Standard))
+        {
+            return false;
+        }
 
-    bool is12 = slope == config_t::Slope_12db;
-    switch (passType)
+        bool is12 = f.slope == filter_t::config_t::Slope_12db;
+        switch (f.passType)
+        {
+        case filter_t::config_t::LP:
+            f.setQFType(is12 ? sst::filters::FilterType::fut_lp12
+                             : sst::filters::FilterType::fut_lp24);
+            break;
+        case filter_t::config_t::HP:
+            f.setQFType(is12 ? sst::filters::FilterType::fut_hp12
+                             : sst::filters::FilterType::fut_hp24);
+            break;
+        case filter_t::config_t::BP:
+            f.setQFType(is12 ? sst::filters::FilterType::fut_bp12
+                             : sst::filters::FilterType::fut_bp24);
+            break;
+        case filter_t::config_t::Notch:
+            f.setQFType(is12 ? sst::filters::FilterType::fut_notch12
+                             : sst::filters::FilterType::fut_notch24);
+            break;
+        }
+
+        switch (f.drive)
+        {
+        case filter_t::drives_t::Standard:
+            f.setQFSubType(sst::filters::FilterSubType::st_Standard); // which is same val as notch
+            break;
+        case filter_t::drives_t::Driven:
+            f.setQFSubType(sst::filters::FilterSubType::st_Driven);
+            break;
+        case filter_t::drives_t::Clean:
+            f.setQFSubType(sst::filters::FilterSubType::st_Clean);
+            break;
+        case filter_t::drives_t::Mild:
+            f.setQFSubType(sst::filters::FilterSubType::st_NotchMild);
+            break;
+        }
+
+        return f.getQFPtr();
+    }
+    static void prepareBlock(Filter<ft, blockSize> &f)
     {
-    case config_t::LP:
-        setQFType(is12 ? sst::filters::FilterType::fut_lp12 : sst::filters::FilterType::fut_lp24);
-        break;
-    case config_t::HP:
-        setQFType(is12 ? sst::filters::FilterType::fut_hp12 : sst::filters::FilterType::fut_hp24);
-        break;
-    case config_t::BP:
-        setQFType(is12 ? sst::filters::FilterType::fut_bp12 : sst::filters::FilterType::fut_bp24);
-        break;
-    case config_t::Notch:
-        setQFType(is12 ? sst::filters::FilterType::fut_notch12
-                       : sst::filters::FilterType::fut_notch24);
-        break;
+        for (int i = 0; i < nVoices; ++i)
+        {
+            if (f.active[i])
+                f.setupCoefficients(i, f.cutoff[i], f.resonance[i]);
+        }
     }
+    static void reset(Filter<ft, blockSize> &f) { f.initQF(); }
+};
 
-    switch (drive)
-    {
-    case drives_t::Standard:
-        setQFSubType(sst::filters::FilterSubType::st_Standard); // which is same val as notch
-        break;
-    case drives_t::Driven:
-        setQFSubType(sst::filters::FilterSubType::st_Driven);
-        break;
-    case drives_t::Clean:
-        setQFSubType(sst::filters::FilterSubType::st_Clean);
-        break;
-    case drives_t::Mild:
-        setQFSubType(sst::filters::FilterSubType::st_NotchMild);
-        break;
-    }
-
-    return getQFPtr();
-}
-
-template <> void Filter<FilterTypes::VemberClassic>::prepareBlock()
-{
-    for (int i = 0; i < nVoices; ++i)
-    {
-        if (true) // active[i]
-            setupCoefficients(i, cutoff[i], resonance[i]);
-    }
-}
-
-template <> void Filter<FilterTypes::VemberClassic>::reset() { initQF(); }
 } // namespace sst::filterplusplus
 #endif // VEMBERCLASSIC_H
