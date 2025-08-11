@@ -38,7 +38,10 @@ template <typename F> void bruteForceResponseCurve(std::function<void(F &)> conf
             filter.setVoiceActive(j, true);
             filter.setCutoffAndResonance(j, 0, 0.7); // 440hz
         }
-        filter.prepareInstance();
+        if (!filter.prepareInstance())
+        {
+            throw std::runtime_error("Failed to prepare instance");
+        }
 
         float fr[nVoices], inf[nVoices], phase[nVoices];
         for (int j = 0; j < nVoices; ++j)
@@ -93,7 +96,8 @@ template <typename F> void bruteForceResponseCurve(std::function<void(F &)> conf
         {
             irms[j] = sqrt(irms[j] / 1500.0);
             orms[j] = sqrt(orms[j] / 1500.0);
-            std::cout << "RMS " << i + j * step << ": " << irms[j] << " " << orms[j] << std::endl;
+            // std::cout << "RMS " << i + j * step << ": " << irms[j] << " " << orms[j] << std::endl;
+            std::cout << i+j*step << ", " << std::log(orms[j]/irms[j]) << std::endl;
         }
     }
 }
