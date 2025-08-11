@@ -125,9 +125,10 @@ struct Filter : features::AddSlope<ft, bs>,
     friend class FilterPreparation<ft, blockSize>;
     friend class FilterSampleProcessor<ft, blockSize>;
 
+    double sampleRate{1}, sampleRateInv{1};
+
   protected:
     config_t config;
-    double sampleRate{1}, sampleRateInv{1};
     std::array<float, nVoices> cutoff, resonance;
     std::array<uint32_t, nVoices> active;
 };

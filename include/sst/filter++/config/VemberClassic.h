@@ -117,14 +117,18 @@ template <size_t blockSize> struct FilterPreparation<FilterModels::VemberClassic
     static void prepareBlock(filter_t &f)
     {
         f.quadFilterUnitState.sampleRate = f.sampleRate;
-        f.quadFilterUnitState.sampleRateInv = 1.0 / f.sampleRate; // TODO CACHE
+        f.quadFilterUnitState.sampleRateInv = f.sampleRateInv;
         for (int i = 0; i < nVoices; ++i)
         {
             f.quadFilterUnitState.active[i] = f.active[i];
             f.quadFilterUnitState.DB[i] = nullptr;
 
             if (f.active[i])
-                f.setupCoefficients(i, f.cutoff[i], f.resonance[i]);
+            {
+                f.makers[i].MakeCoeffs(f.cutoff[i], f.resonance[i], f.qfType, f.qfSubType, nullptr,
+                                       false);
+                f.makers[i].template updateState(f.quadFilterUnitState, i);
+            }
         }
     }
 
@@ -134,7 +138,7 @@ template <size_t blockSize> struct FilterPreparation<FilterModels::VemberClassic
         for (int i = 0; i < nVoices; ++i)
         {
             if (f.active[i])
-                f.makers[i].template updateState(f.quadFilterUnitState, i);
+                f.makers[i].template updateCoefficients(f.quadFilterUnitState, i);
         }
     }
     // we need to split reset and init
