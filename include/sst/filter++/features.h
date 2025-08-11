@@ -64,7 +64,13 @@ DeclareFeature(BasicQuadFilterAPI)
         memset(&quadFilterUnitState, 0, sizeof(quadFilterUnitState));
         filterFunc = nullptr;
     }
-    [[nodiscard]] bool getQFPtr()
+    void resetQF()
+    {
+        memset(&quadFilterUnitState, 0, sizeof(quadFilterUnitState));
+        for (auto &m : makers)
+            m.Reset();
+    }
+    [[nodiscard]] bool resolveQFPtr()
     {
         filterFunc = sst::filters::GetCompensatedQFPtrFilterUnit<true>(qfType, qfSubType);
         return filterFunc != nullptr;
@@ -78,6 +84,7 @@ DeclareFeature(BasicQuadFilterAPI)
     sst::filters::FilterSubType qfSubType{};
 
     sst::filters::FilterUnitQFPtr filterFunc{nullptr};
+    std::array<filters::FilterCoefficientMaker<>, nVoices> makers;
 };
 
 } // namespace sst::filterplusplus::features

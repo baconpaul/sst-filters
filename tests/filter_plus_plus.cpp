@@ -40,4 +40,12 @@ TEST_CASE("Filter++ on Classic")
     filter.setVoiceActive(3, false);
     filter.setCutoffAndResonance(0, 0, 0.7); // 440hz
     filter.prepareBlock();
+
+    for (int i = 0; i < vcf_t::blockSize; ++i)
+    {
+        auto in = SIMD_MM(setzero_ps());
+        SIMD_M128 out;
+        filter.processSingle(in, out);
+    }
+    filter.completeBlock();
 }

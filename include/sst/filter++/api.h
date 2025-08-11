@@ -48,15 +48,16 @@ namespace sst::filterplusplus
 {
 
 template <FilterModels ft, size_t blockSize> struct FilterPreparation;
+template <FilterModels ft, size_t blockSize> struct FilterSampleProcessor;
 
-template <FilterModels ft, size_t blockSize>
-struct Filter : features::AddSlope<ft, blockSize>,
-                features::AddPassTypes<ft, blockSize>,
-                features::AddDrive<ft, blockSize>,
-                features::AddBasicQuadFilterAPI<ft, blockSize>
+template <FilterModels ft, size_t bs>
+struct Filter : features::AddSlope<ft, bs>,
+                features::AddPassTypes<ft, bs>,
+                features::AddDrive<ft, bs>,
+                features::AddBasicQuadFilterAPI<ft, bs>
 {
+    static constexpr size_t blockSize{bs};
     using config_t = FilterConfig<ft, blockSize>;
-
     // The minimum api is
     void setSampleRate(double sr)
     {
@@ -75,17 +76,54 @@ struct Filter : features::AddSlope<ft, blockSize>,
         resonance[voice] = res;
     }
 
-    void prepareBlock();
     void reset();
 
+    void prepareBlock();
+
     // Then to calculate the block call one of these
-    void processBlock(float *in, float *out);
-    void processBlock(float *inL, float *inR, float *outL, float *outR);
+    void processBlock(float *in, float *out)
+    {
+        for (int i = 0; i < blockSize; i++)
+        {
+            // processSingle(SIMD_M128::load(in + i * 2), SIMD_M128::load(out + i * 2))
+        }
+    }
+    void processBlock(float *inL, float *inR, float *outL, float *outR)
+    {
+        for (int i = 0; i < blockSize; i++)
+        {
+            // processSingle(SIMD_M128::load(in + i * 2), SIMD_M128::load(out + i * 2))
+        }
+    }
     void processBlock(float *in1, float *in2, float *in3, float *in4, float *out1, float *out2,
-                      float *out3, float *out4);
-    void processBlock(SIMD_M128 *in, SIMD_M128 *out);
+                      float *out3, float *out4)
+    {
+        for (int i = 0; i < blockSize; i++)
+        {
+            // processSingle(SIMD_M128::load(in + i * 2), SIMD_M128::load(out + i * 2))
+        }
+    }
+    void processBlock(SIMD_M128 *in, SIMD_M128 *out)
+    {
+        for (int i = 0; i < blockSize; i++)
+        {
+            processSingle(in[i], out[i]);
+        }
+    }
+
+    /**
+     * It is the callers responsibility to call this exactly blockSize times between
+     * the call to prepareBlock and completeBlock
+     *
+     * @param in
+     * @param out
+     */
+    void processSingle(const SIMD_M128 in, SIMD_M128 &out);
+
+    void completeBlock();
 
     friend class FilterPreparation<ft, blockSize>;
+    friend class FilterSampleProcessor<ft, blockSize>;
 
   protected:
     config_t config;
@@ -104,7 +142,19 @@ template <FilterModels ft, size_t blockSize> struct FilterPreparation
     {
         throw std::logic_error("Not implemented FP");
     }
+    static void completeBlock(Filter<ft, blockSize> &)
+    {
+        throw std::logic_error("Not implemented FP");
+    }
     static void reset(Filter<ft, blockSize> &) { throw std::logic_error("Not implemented FP"); }
+};
+
+template <FilterModels ft, size_t blockSize> struct FilterSampleProcessor
+{
+    static void processSingle(Filter<ft, blockSize> &, const SIMD_M128 in, SIMD_M128 &out)
+    {
+        throw std::logic_error("Not implemented FP Process");
+    }
 };
 
 template <FilterModels ft, size_t blockSize> bool Filter<ft, blockSize>::prepareInstance()
@@ -120,6 +170,17 @@ template <FilterModels ft, size_t blockSize> void Filter<ft, blockSize>::prepare
 template <FilterModels ft, size_t blockSize> void Filter<ft, blockSize>::reset()
 {
     FilterPreparation<ft, blockSize>::reset(*this);
+}
+
+template <FilterModels ft, size_t blockSize> void Filter<ft, blockSize>::completeBlock()
+{
+    FilterPreparation<ft, blockSize>::completeBlock(*this);
+}
+
+template <FilterModels ft, size_t blockSize>
+void Filter<ft, blockSize>::processSingle(SIMD_M128 in, SIMD_M128 &out)
+{
+    FilterSampleProcessor<ft, blockSize>::processSingle(*this, in, out);
 }
 
 }; // namespace sst::filterplusplus

@@ -19,6 +19,7 @@
 #include "sst/filter++/features.h"
 #include "sst/filters.h"
 
+#include <cassert>
 #include <sst/filter++/api.h>
 
 namespace sst::filterplusplus
@@ -60,8 +61,9 @@ template <size_t blockSize> struct FilterPreparation<FilterModels::VemberClassic
 {
     static constexpr FilterModels ft = FilterModels::VemberClassic;
     using filter_t = Filter<ft, blockSize>;
-    [[nodiscard]] static bool prepareInstance(Filter<ft, blockSize> &f)
+    [[nodiscard]] static bool prepareInstance(filter_t &f)
     {
+        f.initQF();
         if (f.passType == filter_t::passTypes_t::Notch &&
             !(f.drive == filter_t::drives_t::Mild || f.drive == filter_t::drives_t::Standard))
         {
@@ -105,17 +107,48 @@ template <size_t blockSize> struct FilterPreparation<FilterModels::VemberClassic
             break;
         }
 
-        return f.getQFPtr();
+        for (auto &maker : f.makers)
+        {
+            maker.setSampleRateAndBlockSize(f.sampleRate, blockSize);
+        }
+
+        return f.resolveQFPtr();
     }
-    static void prepareBlock(Filter<ft, blockSize> &f)
+    static void prepareBlock(filter_t &f)
     {
+        f.quadFilterUnitState.sampleRate = f.sampleRate;
+        f.quadFilterUnitState.sampleRateInv = 1.0 / f.sampleRate; // TODO CACHE
         for (int i = 0; i < nVoices; ++i)
         {
+            f.quadFilterUnitState.active[i] = f.active[i];
+            f.quadFilterUnitState.DB[i] = nullptr;
+
             if (f.active[i])
                 f.setupCoefficients(i, f.cutoff[i], f.resonance[i]);
         }
     }
-    static void reset(Filter<ft, blockSize> &f) { f.initQF(); }
+
+    static void completeBlock(filter_t &f)
+    {
+        // bring the state back
+        for (int i = 0; i < nVoices; ++i)
+        {
+            if (f.active[i])
+                f.makers[i].template updateState(f.quadFilterUnitState, i);
+        }
+    }
+    // we need to split reset and init
+    static void reset(filter_t &f) { f.resetQF(); }
+};
+
+template <size_t blockSize> struct FilterSampleProcessor<FilterModels::VemberClassic, blockSize>
+{
+    static void processSingle(Filter<FilterModels::VemberClassic, blockSize> &f, const SIMD_M128 in,
+                              SIMD_M128 &out)
+    {
+        assert(f.filterFunc);
+        out = f.filterFunc(&f.quadFilterUnitState, in);
+    }
 };
 
 } // namespace sst::filterplusplus

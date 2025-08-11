@@ -15,12 +15,14 @@
 
 #ifndef INCLUDE_SST_FILTERPLUSPLUS_DETAILS_FEATURES_IMPL_H
 #define INCLUDE_SST_FILTERPLUSPLUS_DETAILS_FEATURES_IMPL_H
+#include <TestUtils.h>
 
 namespace sst::filterplusplus::features
 {
 template <FilterModels ft, size_t blockSize>
 void WithBasicQuadFilterAPI<ft, blockSize, true>::setupCoefficients(int voice, float cu, float res)
 {
+    // makers[voice].MakeCoeffs()
 }
 } // namespace sst::filterplusplus::features
 
