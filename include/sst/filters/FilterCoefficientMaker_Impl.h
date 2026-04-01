@@ -18,6 +18,7 @@
 #include "FilterCoefficientMaker.h"
 #include "sst/utilities/SincTable.h"
 #include "QuadFilterUnit.h"
+#include "AirwinZFilter.h"
 
 namespace sst::filters
 {
@@ -389,6 +390,49 @@ void FilterCoefficientMaker<TuningProvider>::MakeCoeffs(float Freq, float Reso, 
     case fut_cytomic_svf:
         cytomic_quadform::makeCoefficients(this, Freq, Reso, SubType, sampleRate, sampleRateInv,
                                            providerI, extra);
+        break;
+
+    // AirwinZ: extract poles and drive from subtype or extra parameters, then
+    // call makeCoefficients with explicit float poles and drive arguments.
+    case fut_airwinz_lp:
+    case fut_airwinz_hp:
+    case fut_airwinz_bp:
+    case fut_airwinz_notch:
+    {
+        static const float driveTable[4] = {0.f, 0.33f, 0.66f, 1.f};
+        float azPoles, azDrive;
+        if (SubType == st_airwinz_pp_continuous)
+        {
+            // filters++ continuous path: both poles and drive from extra params.
+            azPoles = std::clamp(extra2, 0.f, 4.f);
+            azDrive = std::clamp(extra, 0.f, 1.f);
+        }
+        else if (SubType >= 16)
+        {
+            // filters++ discrete-poles path: subtypes 16–19 encode poles 1–4; drive from extra.
+            azPoles = (float)(SubType - 15);
+            azDrive = std::clamp(extra, 0.f, 1.f);
+        }
+        else
+        {
+            // Classic path: subtype 0–15 = (poles-1)*4 + drive_index.
+            azPoles = (float)((SubType / 4) + 1);
+            azDrive = driveTable[SubType % 4];
+        }
+        if (Type == fut_airwinz_lp)
+            AirwinZFilter::makeCoefficients<TuningProvider, AirwinZFilter::AZPassmode::Low>(
+                this, Freq, Reso, azPoles, azDrive, sampleRate, sampleRateInv, providerI);
+        else if (Type == fut_airwinz_hp)
+            AirwinZFilter::makeCoefficients<TuningProvider, AirwinZFilter::AZPassmode::High>(
+                this, Freq, Reso, azPoles, azDrive, sampleRate, sampleRateInv, providerI);
+        else if (Type == fut_airwinz_bp)
+            AirwinZFilter::makeCoefficients<TuningProvider, AirwinZFilter::AZPassmode::Band>(
+                this, Freq, Reso, azPoles, azDrive, sampleRate, sampleRateInv, providerI);
+        else
+            AirwinZFilter::makeCoefficients<TuningProvider, AirwinZFilter::AZPassmode::Notch>(
+                this, Freq, Reso, azPoles, azDrive, sampleRate, sampleRateInv, providerI);
+    }
+    break;
 
     case num_filter_types:
         // This should really be an error condition of course

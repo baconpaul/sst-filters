@@ -46,7 +46,9 @@ enum struct FilterModel : uint32_t
 
     TriPole = 0x70,
     Comb = 0x80, // Including positive and negative
-    SampleAndHold = 0x85
+    SampleAndHold = 0x85,
+
+    AirwinZ = 0x90
 };
 
 constexpr const char *toCharPtr(const FilterModel &f);

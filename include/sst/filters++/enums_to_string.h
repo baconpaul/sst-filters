@@ -61,6 +61,8 @@ inline constexpr const char *toCharPtr(const FilterModel &f)
         return "Comb";
     case FilterModel::SampleAndHold:
         return "Sample & Hold";
+    case FilterModel::AirwinZ:
+        return "AirwinZ";
     };
     return "MODEL_ERROR";
 }

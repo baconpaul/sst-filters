@@ -27,6 +27,7 @@
 #include "ResonanceWarp.h"
 #include "TriPoleFilter.h"
 #include "CytomicSVFQuadForm.h"
+#include "AirwinZFilter.h"
 
 namespace sst::filters
 {
@@ -1019,6 +1020,17 @@ inline FilterUnitQFPtr GetCompensatedQFPtrFilterUnit(FilterType type, FilterSubT
             return cytomic_quadform::CytomicQuad<true>;
         else
             return cytomic_quadform::CytomicQuad;
+
+    // AirwinZ: poles stored in C[az_poles] at runtime; one process function per
+    // passmode handles all pole counts via progressive wet-blend of stages.
+    case fut_airwinz_lp:
+        return AirwinZFilter::process_Low;
+    case fut_airwinz_hp:
+        return AirwinZFilter::process_High;
+    case fut_airwinz_bp:
+        return AirwinZFilter::process_Band;
+    case fut_airwinz_notch:
+        return AirwinZFilter::process_Notch;
 
     case fut_none:
     case num_filter_types:

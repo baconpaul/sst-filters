@@ -7,6 +7,7 @@ target_link_libraries(sst-filters-tests PRIVATE ${PROJECT_NAME} simde)
 #target_link_options(sst-filters-tests PRIVATE -fsanitize=address -fsanitize=undefined)
 target_sources(sst-filters-tests
         PRIVATE
+        AirwinZFilterTests.cpp
         BasicFiltersTest.cpp
         BiquadTest.cpp
         CutoffWarpTest.cpp

@@ -58,6 +58,10 @@ enum FilterType
     fut_tripole,          /**< Multi - Tri-pole */
     fut_cytomic_svf,      /**< Multi - Cytomic SVF */
     fut_obxd_xpander,     /**< Multi - OB-Xd Xpander */
+    fut_airwinz_lp,       /**< Lowpass  - Airwindows Z */
+    fut_airwinz_hp,       /**< Highpass - Airwindows Z */
+    fut_airwinz_bp,       /**< Bandpass - Airwindows Z */
+    fut_airwinz_notch,    /**< Notch    - Airwindows Z */
     num_filter_types,
 };
 
@@ -103,7 +107,11 @@ const char filter_type_names[num_filter_types][32] = {
     "FX Res Warp AP",    // fut_resonancewarp_ap
     "MULTI Tri-pole",    // fut_tripole
     "MULTI Fast SVF",    // fut_cytomic_svf
-    "MULTI Xpander"      // fut_obxd_xpander
+    "MULTI Xpander",     // fut_obxd_xpander
+    "LP AirwinZ",        // fut_airwinz_lp
+    "HP AirwinZ",        // fut_airwinz_hp
+    "BP AirwinZ",        // fut_airwinz_bp
+    "N AirwinZ"          // fut_airwinz_notch
     /* this is a ruler to ensure names do not exceed 31 characters
      0123456789012345678901234567890
     */
@@ -145,7 +153,11 @@ const char filter_menu_names[num_filter_types][32] = {
     "Resonance Warp Allpass",
     "Tri-pole",
     "Fast SVF",
-    "Xpander"
+    "Xpander",
+    "AirwinZ", // LP
+    "AirwinZ", // HP
+    "AirwinZ", // BP
+    "AirwinZ"  // Notch
     /* this is a ruler to ensure names do not exceed 31 characters
      0123456789012345678901234567890
     */
@@ -224,6 +236,13 @@ const char fut_obxd_xpander_subtypes[15][32] = {"LP1", "LP2",     "LP3",     "LP
                                                 "HP2", "HP3",     "BP2",     "BP4",    "N2",
                                                 "PH3", "HP2+LP1", "HP3+LP1", "N2+LP1", "PH3+LP1"};
 
+const char fut_airwinz_subtypes[16][32] = {
+    "1-Pole Clean", "1-Pole Low Drive", "1-Pole Mid Drive", "1-Pole Full Drive",
+    "2-Pole Clean", "2-Pole Low Drive", "2-Pole Mid Drive", "2-Pole Full Drive",
+    "3-Pole Clean", "3-Pole Low Drive", "3-Pole Mid Drive", "3-Pole Full Drive",
+    "4-Pole Clean", "4-Pole Low Drive", "4-Pole Mid Drive", "4-Pole Full Drive",
+};
+
 /** The number of sub-types for each filter type */
 const int fut_subcount[num_filter_types] = {
     0,  // fut_none
@@ -261,7 +280,11 @@ const int fut_subcount[num_filter_types] = {
     8,  // fut_resonancewarp_ap
     12, // fut_tripole
     9,  // fut_cytomic
-    15  // fit_obxd_xpander
+    15, // fut_obxd_xpander
+    16, // fut_airwinz_lp
+    16, // fut_airwinz_hp
+    16, // fut_airwinz_bp
+    16, // fut_airwinz_notch
 };
 
 /*
@@ -406,7 +429,34 @@ enum FilterSubType
     st_obxdxpander_hp2lp1 = 11,
     st_obxdxpander_hp3lp1 = 12,
     st_obxdxpander_n2lp1 = 13,
-    st_obxdxpander_ph3lp1 = 14
+    st_obxdxpander_ph3lp1 = 14,
+
+    // AirwinZ: subtype = (poles-1)*4 + drive_index
+    // drive_index: 0=clean(0.0) 1=low(0.33) 2=mid(0.66) 3=full(1.0)
+    // subtypes 16-19 are the filters++ continuous-drive variants (same poles, drive=extra)
+    st_airwinz_p1_clean = 0,
+    st_airwinz_p1_low = 1,
+    st_airwinz_p1_mid = 2,
+    st_airwinz_p1_full = 3,
+    st_airwinz_p2_clean = 4,
+    st_airwinz_p2_low = 5,
+    st_airwinz_p2_mid = 6,
+    st_airwinz_p2_full = 7,
+    st_airwinz_p3_clean = 8,
+    st_airwinz_p3_low = 9,
+    st_airwinz_p3_mid = 10,
+    st_airwinz_p3_full = 11,
+    st_airwinz_p4_clean = 12,
+    st_airwinz_p4_low = 13,
+    st_airwinz_p4_mid = 14,
+    st_airwinz_p4_full = 15,
+    // filters++ discrete-drive variants (poles fixed by subtype):
+    st_airwinz_pp_p1 = 16,
+    st_airwinz_pp_p2 = 17,
+    st_airwinz_pp_p3 = 18,
+    st_airwinz_pp_p4 = 19,
+    // filters++ fully-continuous variant: poles from extra2, drive from extra1
+    st_airwinz_pp_continuous = 20
 };
 
 } // namespace sst::filters

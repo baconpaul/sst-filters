@@ -65,6 +65,8 @@ inline int Filter::coefficientsExtraCount(FilterModel model, const ModelConfig &
         return 0;
     case FilterModel::K35:
         return config.dt == DriveMode::K35_Continuous ? 1 : 0;
+    case FilterModel::AirwinZ:
+        return 2; // extra1 = drive (0..1), extra2 = poles (0..4)
     case FilterModel::CytomicSVF:
     {
         if (config.pt == Passband::Bell || config.pt == Passband::LowShelf ||
@@ -187,7 +189,8 @@ inline std::vector<FilterModel> Filter::availableModels()
             FilterModel::OBXD_2Pole, FilterModel::OBXD_4Pole,    FilterModel::OBXD_Xpander,
             FilterModel::K35,        FilterModel::DiodeLadder,   FilterModel::VintageLadder,
             FilterModel::CutoffWarp, FilterModel::ResonanceWarp, FilterModel::CytomicSVF,
-            FilterModel::TriPole,    FilterModel::Comb,          FilterModel::SampleAndHold};
+            FilterModel::TriPole,    FilterModel::Comb,          FilterModel::SampleAndHold,
+            FilterModel::AirwinZ};
 }
 
 inline size_t Filter::requiredDelayLinesSizes(FilterModel model, const ModelConfig &k)
